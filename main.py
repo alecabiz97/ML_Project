@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from ICubDataset import *
+from ICubDatasets import *
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True' # Non so cosa significa, ma lo cercherò, lo troverò e lo capirò
 import numpy as np
@@ -20,11 +20,11 @@ from utils import *
 root="..\\iCubWorld1.0\\human"
 
 # Create training_data and test_data
-training_data=ICubDataset(root,
+training_data=ICubWorld7(root,
     train=True,
     transform=ToTensor())
 
-test_data = ICubDataset(root,
+test_data = ICubWorld7(root,
                         train=False,
                         transform=ToTensor())
 
