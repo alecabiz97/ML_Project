@@ -1,8 +1,7 @@
 from decimal import Decimal
 
-from ICubDatasets import *
+from icub_datasets import *
 import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True' # Non so cosa significa, ma lo cercherò, lo troverò e lo capirò
 import numpy as np
 import pandas as pd
 import torch.utils.data
