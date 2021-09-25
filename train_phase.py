@@ -42,18 +42,10 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
-                # zero the parameter gradients
                 optimizer.zero_grad()
 
-                # forward
-                # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
-                    # Get model outputs and calculate loss
-                    # Special case for inception because in training it has an auxiliary output. In train
-                    #   mode we calculate the loss by summing the final output and the auxiliary output
-                    #   but in testing we only consider the final output.
                     if is_inception and phase == 'train':
-                        # From https://discuss.pytorch.org/t/how-to-optimize-inception-model-with-auxiliary-classifiers/7958
                         outputs, aux_outputs = model(inputs)
                         loss1 = criterion(outputs, labels)
                         loss2 = criterion(aux_outputs, labels)
@@ -100,8 +92,6 @@ def set_parameter_requires_grad(model, feature_extracting):
 
 
 def initialize_model(model_name, num_classes, feature_extract, use_pretrained=True):
-    # Initialize these variables which will be set in this if statement. Each of these
-    #   variables is model specific.
     model_ft = None
     input_size = 0
 
@@ -175,89 +165,96 @@ if __name__ == '__main__':
 
     root = 'ICubWorld28'
 
-    model_name = "resnet"  # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
-    num_classes = 7  # Number of classes in the dataset
-    batch_size = 64  # Batch size for training (change depending on how much memory you have)
-    num_epochs = 5  # Number of epochs to train for
-    SAVE = True
+    for model_name in ['resnet', 'alexnet', 'squeezenet']:
+        for learning_rate in [0.01, 0.001, 0.0001]:
+            # model_name = "alexnet"  # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
+            # model_name = [resnet, alexnet, squeezenet]
+            num_classes = 7  # Number of classes in the dataset
+            batch_size = 64  # Batch size for training (change depending on how much memory you have)
+            num_epochs = 50  # Number of epochs to train for
+            # learning_rate = 0.001
+            SAVE = True  # Boolean parameter to decide if the model needs to be saved (True=Yes, False=No)
 
-    # Flag for feature extracting. When False, we finetune the whole model,
-    #   when True we only update the reshaped layer params
-    feature_extract = True
+            feature_extract = True
 
-    # Initialize the model for this run
-    model_ft, input_size = initialize_model(model_name, num_classes, feature_extract, use_pretrained=True)
+            model_ft, input_size = initialize_model(model_name, num_classes, feature_extract, use_pretrained=True)
 
-    # Print the model we just instantiated
-    # print(model_ft)
+            data_transforms = transforms.Compose([
+                transforms.Resize(input_size),
+                transforms.CenterCrop(input_size),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
 
-    # Data augmentation and normalization for training
-    # Just normalization for validation
-    data_transforms = transforms.Compose([
-        transforms.Resize(input_size),
-        transforms.CenterCrop(input_size),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+            print("Initializing Datasets and Dataloaders...")
 
-    print("Initializing Datasets and Dataloaders...")
+            dataset = ICubWorld28(root, train=True, transform=data_transforms)
+            # Create subset to speed up the process
+            # rand_indx = np.random.permutation(np.arange(len(dataset)))[0:100]
+            # dataset = Subset(dataset, rand_indx)
 
-    dataset = ICubWorld28(root, train=True, transform=data_transforms)
-    # Create subset to speed up the process
-    rand_indx = np.random.permutation(np.arange(len(dataset)))[0:800]
-    dataset = Subset(dataset, rand_indx)
+            tr = 0.8
+            n_train_samples = int(tr * len(dataset))
+            n_val_samples = len(dataset) - n_train_samples
+            print(n_train_samples, n_val_samples)
 
-    tr = 0.8
-    n_train_samples = int(tr * len(dataset))
-    n_val_samples = len(dataset) - n_train_samples
+            generator = torch.Generator().manual_seed(42)
+            training_data, validation_data = random_split(dataset, [n_train_samples, n_val_samples], generator)
 
-    generator = torch.Generator().manual_seed(42)
-    training_data, validation_data = random_split(dataset, [n_train_samples, n_val_samples], generator)
+            train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
+            val_dataloader = DataLoader(validation_data, batch_size=batch_size, shuffle=True)
+            dataloaders = {'train': train_dataloader, 'val': val_dataloader}
 
-    train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
-    val_dataloader = DataLoader(validation_data, batch_size=batch_size, shuffle=True)
-    dataloaders = {'train': train_dataloader, 'val': val_dataloader}
+            # Detect if we have a GPU available
+            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            print(device)
 
-    # Detect if we have a GPU available
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    print(device)
+            # Send the model to GPU
+            model_ft = model_ft.to(device)
 
-    # Send the model to GPU
-    model_ft = model_ft.to(device)
+            params_to_update = model_ft.parameters()
+            print("Params to learn:")
+            if feature_extract:
+                params_to_update = []
+                for name, param in model_ft.named_parameters():
+                    if param.requires_grad == True:
+                        params_to_update.append(param)
+                        print("\t", name)
+            else:
+                for name, param in model_ft.named_parameters():
+                    if param.requires_grad == True:
+                        print("\t", name)
 
-    # Gather the parameters to be optimized/updated in this run. If we are
-    #  finetuning we will be updating all parameters. However, if we are
-    #  doing feature extract method, we will only update the parameters
-    #  that we have just initialized, i.e. the parameters with requires_grad
-    #  is True.
-    params_to_update = model_ft.parameters()
-    print("Params to learn:")
-    if feature_extract:
-        params_to_update = []
-        for name, param in model_ft.named_parameters():
-            if param.requires_grad == True:
-                params_to_update.append(param)
-                print("\t", name)
-    else:
-        for name, param in model_ft.named_parameters():
-            if param.requires_grad == True:
-                print("\t", name)
+            optimizer_ft = optim.SGD(params_to_update, lr=learning_rate, momentum=0.9)
 
-    # Observe that all parameters are being optimized
-    optimizer_ft = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
+            criterion = nn.CrossEntropyLoss()
 
-    # Setup the loss fxn
-    criterion = nn.CrossEntropyLoss()
+            # Train and evaluate
+            model_ft, history = train_model(model_ft, dataloaders, criterion, optimizer_ft, num_epochs=num_epochs,
+                                            is_inception=(model_name == "inception"))
 
-    # Train and evaluate
-    model_ft, history = train_model(model_ft, dataloaders, criterion, optimizer_ft, num_epochs=num_epochs,
-                                    is_inception=(model_name == "inception"))
-    if SAVE:
-        # Save the model
-        f = open('model.pkl', 'wb')
-        pickle.dump(model_ft, f)
-        f.close()
+            # Plot the train
+            for phase in ['train', 'val']:
+                data = np.array(history[phase])
+                x = np.arange(1, data.shape[0] + 1)
+                plt.subplot(2, 1, 1)
+                plt.plot(x, data[:, 0], label='{}'.format(phase), marker='.')
+                plt.title('Loss')
+                plt.xlabel('Epochs')
+                plt.legend()
+                plt.subplot(2, 1, 2)
+                plt.plot(x, data[:, 1], label='{}'.format(phase), marker='.')
+                plt.title('Accuracy')
+                plt.xlabel('Epochs')
+            plt.legend()
+            plt.show()
 
-        # Save the history
-        f = open('history.pkl', 'wb')
-        pickle.dump(history, f)
-        f.close()
+            if SAVE:
+                # Save the model
+                f = open(f'{model_name}_{learning_rate}.pkl', 'wb')
+                pickle.dump(model_ft, f)
+                f.close()
+
+                # Save the history
+                f = open(f'history_{model_name}_{learning_rate}.pkl', 'wb')
+                pickle.dump(history, f)
+                f.close()

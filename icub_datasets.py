@@ -7,11 +7,11 @@ from torchvision.transforms import ToTensor
 
 class ICubWorld7(torch.utils.data.Dataset):
 
-    def __init__(self, root,train=True, transform=None, target_transform=None):
+    def __init__(self, root, train=True, transform=None, target_transform=None):
         if train:
-            self.root = os.path.join(root,'train')
+            self.root = os.path.join(root, 'train')
         else:
-            self.root=os.path.join(root,'test')
+            self.root = os.path.join(root, 'test')
 
         # self.img_info is a numpy array:
         # 1° column -> file directory
@@ -20,15 +20,14 @@ class ICubWorld7(torch.utils.data.Dataset):
         for label in os.listdir(self.root):
             class_dir = os.path.join(self.root, label)
             for fname in os.listdir(class_dir):
-                self.img_info.append((os.path.join(label, fname),label))
+                self.img_info.append((os.path.join(label, fname), label))
         # Convert to numpy array
-        self.img_info=np.array(self.img_info)
+        self.img_info = np.array(self.img_info)
         self.labels = np.unique(self.img_info[:, 1])
         # Create a dictionary class_to_idx to convert string labels to integer
         self.class_to_idx = {lab: num for num, lab in enumerate(self.labels)}
         self.transform = transform
         self.target_transform = target_transform
-
 
     def __len__(self):
         ''' Return the number of samples in the dataset'''
@@ -44,10 +43,10 @@ class ICubWorld7(torch.utils.data.Dataset):
             '''
         img_path = os.path.join(self.root, self.img_info[idx, 0])
         image = Image.open(img_path)
-        label = self.img_info[idx, 1] # the label is a string
-        label=self.class_to_idx[label] # the label is an integer
+        label = self.img_info[idx, 1]  # the label is a string
+        label = self.class_to_idx[label]  # the label is an integer
         if self.transform:
-            image = self.transform(image) # apply a transformation (ex ToTensor())
+            image = self.transform(image)  # apply a transformation (ex ToTensor())
         if self.target_transform:
             label = self.target_transform(label)
         return image, label
@@ -149,8 +148,8 @@ class ICubWorld28(torch.utils.data.Dataset):
             y[i] = label
         return X, y
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     # Prova ICubWorld7
     root = "..\\iCubWorld1.0\\human"
     training_data = ICubWorld7(root)
@@ -167,4 +166,3 @@ if __name__ == '__main__':
     # img.show()
     print(d.labels[y])
     X, y = d.get_data()
-
