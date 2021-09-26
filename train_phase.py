@@ -1,4 +1,5 @@
 from icub_datasets import ICubWorld28
+from utils import *
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -168,11 +169,9 @@ if __name__ == '__main__':
     for model_name in ['resnet', 'alexnet', 'squeezenet']:
         for learning_rate in [0.01, 0.001, 0.0001]:
             # model_name = "alexnet"  # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
-            # model_name = [resnet, alexnet, squeezenet]
             num_classes = 7  # Number of classes in the dataset
             batch_size = 64  # Batch size for training (change depending on how much memory you have)
             num_epochs = 50  # Number of epochs to train for
-            # learning_rate = 0.001
             SAVE = True  # Boolean parameter to decide if the model needs to be saved (True=Yes, False=No)
 
             feature_extract = True
@@ -189,16 +188,11 @@ if __name__ == '__main__':
 
             dataset = ICubWorld28(root, train=True, transform=data_transforms)
             # Create subset to speed up the process
-            # rand_indx = np.random.permutation(np.arange(len(dataset)))[0:100]
+            # rand_indx = np.random.permutation(np.arange(len(dataset)))[0:50]
             # dataset = Subset(dataset, rand_indx)
 
-            tr = 0.8
-            n_train_samples = int(tr * len(dataset))
-            n_val_samples = len(dataset) - n_train_samples
-            print(n_train_samples, n_val_samples)
-
-            generator = torch.Generator().manual_seed(42)
-            training_data, validation_data = random_split(dataset, [n_train_samples, n_val_samples], generator)
+            # Split the dataset in training and validation
+            training_data, validation_data=split_train_validation(dataset)
 
             train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
             val_dataloader = DataLoader(validation_data, batch_size=batch_size, shuffle=True)
