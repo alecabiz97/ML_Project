@@ -75,7 +75,8 @@ class ICubWorld7(torch.utils.data.Dataset):
 
 class ICubWorld28(torch.utils.data.Dataset):
 
-    def __init__(self, root, train=True, transform=None, target_transform=None):
+    def __init__(self, root, train=True, transform=None, target_transform=None,sub_label=False):
+        self.sub_label=sub_label
         if train:
             self.root = os.path.join(root, 'train')
         else:
@@ -99,7 +100,10 @@ class ICubWorld28(torch.utils.data.Dataset):
 
         # Convert to numpy array
         self.img_info = np.array(self.img_info)
-        self.labels = np.unique(self.img_info[:, 1])
+        if self.sub_label:
+            self.labels = np.unique(self.img_info[:, 2]) # ex cup1
+        else:
+            self.labels = np.unique(self.img_info[:, 1]) # ex cup
         # Create a dictionary class_to_idx to convert string labels to integer
         self.class_to_idx = {lab: num for num, lab in enumerate(self.labels)}
         self.transform = transform
@@ -119,7 +123,10 @@ class ICubWorld28(torch.utils.data.Dataset):
             '''
         img_path = os.path.join(self.root, self.img_info[idx, 0])
         image = Image.open(img_path)
-        label = self.img_info[idx, 1]  # the label is a string
+        if self.sub_label:
+            label = self.img_info[idx, 2]  # the label is a string
+        else:
+            label = self.img_info[idx, 1]
         label = self.class_to_idx[label]  # the label is an integer
         if self.transform:
             image = self.transform(image)  # apply a transformation (es ToTensor())
@@ -151,18 +158,20 @@ class ICubWorld28(torch.utils.data.Dataset):
 
 if __name__ == '__main__':
     # Prova ICubWorld7
-    root = "..\\iCubWorld1.0\\human"
-    training_data = ICubWorld7(root)
-    img, y = training_data.__getitem__(1)
-    # imshow(img)
-    # print(len(training_data))
-    # print(len(test_data))
-    X, y = training_data.get_data()
+    # root = "..\\iCubWorld1.0\\human"
+    # training_data = ICubWorld7(root)
+    # img, y = training_data.__getitem__(1)
+    # # imshow(img)
+    # # print(len(training_data))
+    # # print(len(test_data))
+    # X, y = training_data.get_data()
 
     # Prova ICubWorld28
-    root = '..\\ICubWorld28'
-    d = ICubWorld28(root)
-    img, y = d.__getitem__(9000)
-    # img.show()
+    root = 'ICubWorld28'
+    d = ICubWorld28(root,sub_label=True)
+    print(len(d.labels))
+    img, y = d.__getitem__(200)
+    print(y)
+    img.show()
     print(d.labels[y])
-    X, y = d.get_data()
+    # X, y = d.get_data()

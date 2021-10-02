@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # TEST DATA
-f=open('results.pkl','rb')
+f=open('results/test_results.pkl', 'rb')
 results=pickle.load(f)
 f.close()
 

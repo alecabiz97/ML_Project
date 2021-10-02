@@ -164,17 +164,18 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
 
 if __name__ == '__main__':
 
+    # Hyperparameters
     root = 'ICubWorld28'
+    batch_size = 64  # Batch size for training (change depending on how much memory you have)
+    num_epochs = 1  # Number of epochs to train for
+    SAVE = True  # Boolean parameter to decide if the model needs to be saved (True=Yes, False=No)
+    feature_extract = True
+    sub_label=True
+    num_classes=28 if sub_label else 7 # Number of classes in the dataset
+    SUBSET=True
 
-    for model_name in ['resnet', 'alexnet', 'squeezenet']:
+    for model_name in ['alexnet','resnet','squeezenet']:
         for learning_rate in [0.01, 0.001, 0.0001]:
-            # model_name = "alexnet"  # Models to choose from [resnet, alexnet, vgg, squeezenet, densenet, inception]
-            num_classes = 7  # Number of classes in the dataset
-            batch_size = 64  # Batch size for training (change depending on how much memory you have)
-            num_epochs = 50  # Number of epochs to train for
-            SAVE = True  # Boolean parameter to decide if the model needs to be saved (True=Yes, False=No)
-
-            feature_extract = True
 
             model_ft, input_size = initialize_model(model_name, num_classes, feature_extract, use_pretrained=True)
 
@@ -186,10 +187,12 @@ if __name__ == '__main__':
 
             print("Initializing Datasets and Dataloaders...")
 
-            dataset = ICubWorld28(root, train=True, transform=data_transforms)
+            dataset = ICubWorld28(root, train=True, transform=data_transforms,sub_label=sub_label)
+
             # Create subset to speed up the process
-            # rand_indx = np.random.permutation(np.arange(len(dataset)))[0:50]
-            # dataset = Subset(dataset, rand_indx)
+            if SUBSET:
+                rand_indx = np.random.permutation(np.arange(len(dataset)))[0:50]
+                dataset = Subset(dataset, rand_indx)
 
             # Split the dataset in training and validation
             training_data, validation_data=split_train_validation(dataset)
@@ -244,11 +247,17 @@ if __name__ == '__main__':
 
             if SAVE:
                 # Save the model
-                f = open(f'{model_name}_{learning_rate}.pkl', 'wb')
+                f = open(f'{model_name}_{learning_rate}_{num_classes}_classes.pkl', 'wb')
                 pickle.dump(model_ft, f)
                 f.close()
 
                 # Save the history
-                f = open(f'history_{model_name}_{learning_rate}.pkl', 'wb')
+                f = open(f'history_{model_name}_{learning_rate}_{num_classes}_classes.pkl', 'wb')
                 pickle.dump(history, f)
                 f.close()
+
+
+
+
+
+
