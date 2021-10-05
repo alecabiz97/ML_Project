@@ -114,15 +114,6 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
-    elif model_name == "vgg":
-        """ VGG11_bn
-        """
-        model_ft = models.vgg11_bn(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
-        num_ftrs = model_ft.classifier[6].in_features
-        model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
-        input_size = 224
-
     elif model_name == "squeezenet":
         """ Squeezenet
         """
@@ -141,20 +132,6 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         model_ft.classifier = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
-    elif model_name == "inception":
-        """ Inception v3
-        Be careful, expects (299,299) sized images and has auxiliary output
-        """
-        model_ft = models.inception_v3(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
-        # Handle the auxilary net
-        num_ftrs = model_ft.AuxLogits.fc.in_features
-        model_ft.AuxLogits.fc = nn.Linear(num_ftrs, num_classes)
-        # Handle the primary net
-        num_ftrs = model_ft.fc.in_features
-        model_ft.fc = nn.Linear(num_ftrs, num_classes)
-        input_size = 299
-
     else:
         print("Invalid model name, exiting...")
         exit()
@@ -167,12 +144,12 @@ if __name__ == '__main__':
     # Hyperparameters
     root = 'ICubWorld28'
     batch_size = 64  # Batch size for training (change depending on how much memory you have)
-    num_epochs = 1  # Number of epochs to train for
+    num_epochs = 50  # Number of epochs to train for
     SAVE = True  # Boolean parameter to decide if the model needs to be saved (True=Yes, False=No)
     feature_extract = True
     sub_label=True
     num_classes=28 if sub_label else 7 # Number of classes in the dataset
-    SUBSET=True
+    SUBSET=False
 
     for model_name in ['alexnet','resnet','squeezenet']:
         for learning_rate in [0.01, 0.001, 0.0001]:
@@ -226,8 +203,7 @@ if __name__ == '__main__':
             criterion = nn.CrossEntropyLoss()
 
             # Train and evaluate
-            model_ft, history = train_model(model_ft, dataloaders, criterion, optimizer_ft, num_epochs=num_epochs,
-                                            is_inception=(model_name == "inception"))
+            model_ft, history = train_model(model_ft, dataloaders, criterion, optimizer_ft, num_epochs=num_epochs)
 
             # Plot the train
             for phase in ['train', 'val']:
@@ -255,9 +231,3 @@ if __name__ == '__main__':
                 f = open(f'history_{model_name}_{learning_rate}_{num_classes}_classes.pkl', 'wb')
                 pickle.dump(history, f)
                 f.close()
-
-
-
-
-
-
