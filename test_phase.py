@@ -49,7 +49,7 @@ def test(model, test_dataloader, criterion, n_classes):
 if __name__ == "__main__":
 
     # Hyperparameters
-    sub_label = False
+    sub_label = True
     num_classes = 28 if sub_label else 7  # Number of classes in the dataset
     root = "iCubWorld28"
     batch_size = 64  # Batch size for training (change depending on how much memory you have)
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         print("CUDA is not available. Training on CPU...")
         device = "cpu"
 
-    for model_name in ['resnet', 'alexnet', 'squeezenet']:
+    for model_name in ['squeezenet1_1', 'resnet152', 'densenet161']:
         for learning_rate in [0.01, 0.001, 0.0001]:
 
             input_size = 224

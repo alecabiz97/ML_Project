@@ -10,27 +10,27 @@ for n in num_classes:
     results = pickle.load(f)
     f.close()
 
-    models = ['alexnet', 'resnet', 'squeezenet']
+    models = ['squeezenet1_1', 'resnet152', 'densenet161']
     learning_rates = ['0.01', '0.001', '0.0001']
-    alexnet_acc = []
-    resnet_acc = []
-    squeezenet_acc = []
+    squeezenet1_1_acc = []
+    resnet152_acc = []
+    densenet161_acc = []
     for m in models:
         for lr in learning_rates:
-            if m == 'alexnet':
-                alexnet_acc.append(round(results[f'{m}_{lr}'][1], 2))
-            elif m == 'resnet':
-                resnet_acc.append(round(results[f'{m}_{lr}'][1], 2))
-            elif m == 'squeezenet':
-                squeezenet_acc.append(round(results[f'{m}_{lr}'][1], 2))
+            if m == 'squeezenet1_1':
+                squeezenet1_1_acc.append(round(results[f'{m}_{lr}'][1], 2))
+            elif m == 'resnet152':
+                resnet152_acc.append(round(results[f'{m}_{lr}'][1], 2))
+            elif m == 'densenet161':
+                densenet161_acc.append(round(results[f'{m}_{lr}'][1], 2))
 
     x = np.arange(len(learning_rates))  # the label locations
     width = 0.25  # the width of the bars
 
     fig, ax = plt.subplots()
-    rects1 = ax.bar(x - width, alexnet_acc, width, label='Alexnet')
-    rects2 = ax.bar(x, resnet_acc, width, label='Resnet18')
-    rects3 = ax.bar(x + width, squeezenet_acc, width, label='Squeeznet')
+    rects1 = ax.bar(x - width, squeezenet1_1_acc, width, label='Squeezenet1_1')
+    rects2 = ax.bar(x, resnet152_acc, width, label='Resnet152')
+    rects3 = ax.bar(x + width, densenet161_acc, width, label='Densenet161')
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel('Accuracy')
@@ -48,7 +48,7 @@ for n in num_classes:
     plt.show()
 
     # TRAINING DATA
-    models = ['resnet', 'alexnet', 'squeezenet']
+    models = ['squeezenet1_1', 'resnet152', 'densenet161']
     learning_rates = [0.01, 0.001, 0.0001]
     for lr in learning_rates:
         fig = plt.figure()

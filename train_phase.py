@@ -16,7 +16,7 @@ import pickle
 from tqdm import tqdm
 
 
-def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_inception=False):
+def train_model(model, dataloaders, criterion, optimizer, num_epochs=50, is_inception=False):
     since = time.time()
 
     history = {'train': [], 'val': []}
@@ -96,10 +96,10 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
     model_ft = None
     input_size = 0
 
-    if model_name == "resnet":
-        """ Resnet18
+    if model_name == "resnet152":
+        """ Resnet152
         """
-        model_ft = models.resnet18(pretrained=use_pretrained)
+        model_ft = models.resnet152(pretrained=use_pretrained)
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.fc.in_features
         model_ft.fc = nn.Linear(num_ftrs, num_classes)
@@ -114,19 +114,19 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
-    elif model_name == "squeezenet":
+    elif model_name == "squeezenet1_1":
         """ Squeezenet
         """
-        model_ft = models.squeezenet1_0(pretrained=use_pretrained)
+        model_ft = models.squeezenet1_1(pretrained=use_pretrained)
         set_parameter_requires_grad(model_ft, feature_extract)
         model_ft.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=(1, 1), stride=(1, 1))
         model_ft.num_classes = num_classes
         input_size = 224
 
-    elif model_name == "densenet":
+    elif model_name == "densenet161":
         """ Densenet
         """
-        model_ft = models.densenet121(pretrained=use_pretrained)
+        model_ft = models.densenet161(pretrained=use_pretrained)
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier.in_features
         model_ft.classifier = nn.Linear(num_ftrs, num_classes)
@@ -144,14 +144,14 @@ if __name__ == '__main__':
     # Hyperparameters
     root = 'ICubWorld28'
     batch_size = 64  # Batch size for training (change depending on how much memory you have)
-    num_epochs = 50  # Number of epochs to train for
+    num_epochs = 50 # Number of epochs to train for
     SAVE = True  # Boolean parameter to decide if the model needs to be saved (True=Yes, False=No)
     feature_extract = True
-    sub_label=True
-    num_classes=28 if sub_label else 7 # Number of classes in the dataset
-    SUBSET=False
+    sub_label = True
+    num_classes = 28 if sub_label else 7  # Number of classes in the dataset
+    SUBSET = False
 
-    for model_name in ['alexnet','resnet','squeezenet']:
+    for model_name in ['squeezenet1_1', 'resnet152', 'densenet161']:
         for learning_rate in [0.01, 0.001, 0.0001]:
 
             model_ft, input_size = initialize_model(model_name, num_classes, feature_extract, use_pretrained=True)
@@ -164,7 +164,7 @@ if __name__ == '__main__':
 
             print("Initializing Datasets and Dataloaders...")
 
-            dataset = ICubWorld28(root, train=True, transform=data_transforms,sub_label=sub_label)
+            dataset = ICubWorld28(root, train=True, transform=data_transforms, sub_label=sub_label)
 
             # Create subset to speed up the process
             if SUBSET:
@@ -172,7 +172,7 @@ if __name__ == '__main__':
                 dataset = Subset(dataset, rand_indx)
 
             # Split the dataset in training and validation
-            training_data, validation_data=split_train_validation(dataset)
+            training_data, validation_data = split_train_validation(dataset)
 
             train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
             val_dataloader = DataLoader(validation_data, batch_size=batch_size, shuffle=True)
