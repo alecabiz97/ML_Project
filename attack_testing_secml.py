@@ -31,8 +31,8 @@ sub_label=False
 #Perturbation levels to test
 e_vals = CArray.arange(start=0, step=50, stop=500)
 
-for modelname in ['squeezenet1_0_0.01','resnet152_0.01','densenet161_0.001']:
-    f=open(f'trained_models/{modelname}_7_classes.pkl','rb')
+for modelname,lr in zip(['squeezenet1_0','resnet152','densenet161'],['0.01','0.01','0.001']):
+    f=open(f'trained_models/{modelname}_{lr}_7_classes.pkl','rb')
     model = pickle.load(f)
     f.close()
 
@@ -80,4 +80,4 @@ for modelname in ['squeezenet1_0_0.01','resnet152_0.01','densenet161_0.001']:
     CFigure.show()
     end=time()
     print('Evaluation time: {} seconds'.format(round(end-start,2)))
-    fig.savefig(f'eval_{modelname}.pdf',file_format='pdf')
+    fig.savefig(f'Security Evaluation Curve {modelname}_{lr}.pdf',file_format='pdf')
