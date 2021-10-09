@@ -1,9 +1,8 @@
 import os
 import torch.utils.data
-from utils import *
 from PIL import Image
 from torchvision.transforms import ToTensor
-
+import numpy as np
 
 class ICubWorld7(torch.utils.data.Dataset):
 
