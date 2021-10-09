@@ -49,7 +49,7 @@ def test(model, test_dataloader, criterion, n_classes):
 if __name__ == "__main__":
 
     # Hyperparameters
-    sub_label = True
+    sub_label = False
     num_classes = 28 if sub_label else 7  # Number of classes in the dataset
     root = "iCubWorld28"
     batch_size = 64  # Batch size for training (change depending on how much memory you have)
@@ -57,13 +57,13 @@ if __name__ == "__main__":
     SUBSET = False
 
     if torch.cuda.is_available():
-        print("CUDA is available! Training on GPU...")
+        print("CUDA is available! Testing on GPU...")
         device = "cuda"
     else:
-        print("CUDA is not available. Training on CPU...")
+        print("CUDA is not available. Testing on CPU...")
         device = "cpu"
 
-    for model_name in ['squeezenet1_1', 'resnet152', 'densenet161']:
+    for model_name in ['alexnet', 'squeezenet1_0', 'squeezenet1_1', 'resnet18', 'resnet152', 'densenet161']:
         for learning_rate in [0.01, 0.001, 0.0001]:
 
             input_size = 224
