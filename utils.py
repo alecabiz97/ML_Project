@@ -115,3 +115,20 @@ def compact_the_results(n_classes, models, learning_rates):
     f = open(f'results/train_results_7_classes.pkl', 'rb')
     x = pickle.load(f)
     f.close()
+
+def make_subset(dataset,n_sample_for_class):
+    img_info=dataset.img_info
+    labels=dataset.labels
+    n_classes=len(labels)
+    X=torch.zeros(n_sample_for_class*n_classes,3,224,224)
+    Y=torch.zeros(n_sample_for_class*n_classes)
+    i=0
+    for label in labels:
+        #print(f'{label}: {np.sum(img_info[:,1]==label)} sample')
+        indices=np.argwhere(img_info[:,1]==label)[0:n_sample_for_class].flatten()
+        for idx in indices:
+            x,y=dataset.__getitem__(idx)
+            X[i,:,:,:]=x
+            Y[i]=y
+            i+=1
+    return X,Y
