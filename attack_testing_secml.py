@@ -22,11 +22,11 @@ from torch.utils.data import DataLoader
 
 # this is for visualization
 from secml.figure import CFigure
-from utils import run_debug
+from utils import run_debug,make_subset
 from secml.data import CDataset
 from time import time
 
-n_samples=8000
+n_samples_for_class=100
 sub_label=False
 #Perturbation levels to test
 e_vals = CArray.arange(start=0, step=50, stop=500)
@@ -43,8 +43,7 @@ for modelname,lr in zip(['squeezenet1_0','resnet152','densenet161'],['0.01','0.0
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
     dataset = ICubWorld28('ICubWorld28', train=False, transform=data_transforms, sub_label=sub_label)
     labels = dataset.labels
-    dataloader = DataLoader(dataset, batch_size=n_samples, shuffle=True)
-    X, Y = next(iter(dataloader))
+    X, Y = make_subset(dataset,n_samples_for_class)
     print('Number of samples: ',len(Y))
     X, Y = CArray(X.numpy()), CArray(Y.numpy())
     ts=CDataset(X,Y)
@@ -79,5 +78,5 @@ for modelname,lr in zip(['squeezenet1_0','resnet152','densenet161'],['0.01','0.0
     fig.sp.plot_sec_eval(sec_eval.sec_eval_data, marker='o', label='NN', show_average=True)
     CFigure.show()
     end=time()
-    print('Evaluation time: {} seconds'.format(round(end-start,2)))
+    print('Evaluation time: {} minutes'.format(round((end-start)/60,2)))
     fig.savefig(f'Security Evaluation Curve {modelname}_{lr}.pdf',file_format='pdf')
