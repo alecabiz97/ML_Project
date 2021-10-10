@@ -121,7 +121,7 @@ def make_subset(dataset,n_sample_for_class):
     labels=dataset.labels
     n_classes=len(labels)
     X=torch.zeros(n_sample_for_class*n_classes,3,224,224)
-    Y=torch.zeros(n_sample_for_class*n_classes)
+    Y=torch.zeros(n_sample_for_class*n_classes,dtype=int)
     i=0
     for label in labels:
         #print(f'{label}: {np.sum(img_info[:,1]==label)} sample')
