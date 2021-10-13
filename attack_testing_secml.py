@@ -21,10 +21,19 @@ from secml.data import CDataset
 from time import time
 from secml.ml.features import CNormalizerMeanStd
 
+# Hyperparameters
 n_samples_for_class = 100
 sub_label = False
+steps = 100
+y_target = None  # None if `error-generic`, the label of the target class for `error-specific`
+lb = 0.0
+ub = 1.0
+abs_stepsize = 0.03
+
 # Perturbation levels to test
 e_vals = CArray.arange(start=0, step=0.05, stop=0.35)
+
+fig = CFigure(height=6, width=6)
 
 for modelname, lr in zip(['squeezenet1_0', 'resnet152', 'densenet161'], ['0.01', '0.01', '0.001']):
     f = open(f'trained_models/{modelname}_{lr}_7_classes.pkl', 'rb')
@@ -50,12 +59,6 @@ for modelname, lr in zip(['squeezenet1_0', 'resnet152', 'densenet161'], ['0.01',
                              pretrained=True,
                              pretrained_classes=labels)
 
-    steps = 100
-    y_target = None  # None if `error-generic`, the label of the target class for `error-specific`
-    lb = 0.0
-    ub = 1.0
-    abs_stepsize = 0.03
-
     pgd_attack = CFoolboxPGDL2(clf, y_target,
                                lb=lb, ub=ub,
                                abs_stepsize=abs_stepsize,
@@ -71,16 +74,15 @@ for modelname, lr in zip(['squeezenet1_0', 'resnet152', 'densenet161'], ['0.01',
     print("Running security evaluation...")
     sec_eval.run_sec_eval(ts)
 
-    fig = CFigure(height=6, width=6)
-
     # Convenience function for plotting the Security Evaluation Curve
     fig.sp.plot_sec_eval(sec_eval.sec_eval_data, marker='o', label=f'{modelname}',
                          show_average=True, percentage=True)
-    fig.sp.ylim(0, 100)
-    fig.sp.ylabel("Accuracy (%)")
-    CFigure.show()
     end = time()
     print('Evaluation time: {} minutes'.format(round((end - start) / 60, 2)))
 
-    fig.savefig(f'Security Evaluation Curve {modelname} Learning Rate: {lr} Abs. Step Size: {abs_stepsize} '
-                f'Iterations: {steps}.pdf', file_format='pdf')
+fig.sp.ylim(0, 100)
+fig.sp.ylabel("Accuracy (%)")
+CFigure.show()
+
+# Saving the Attack Results on a pdf file
+fig.savefig(f'Security Evaluation Curve', file_format='pdf')
