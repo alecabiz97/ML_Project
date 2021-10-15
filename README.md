@@ -35,6 +35,9 @@ In this file we implemented our plotting part to see the models together so that
 for each of them and the behavior of the loss and accuracy and the test results as a histogram. Also in this
 case we plot both the case with 7 classes and 28 classes.
 
-### provaSecml.py
-In this file we tried to implement an adversarial attempt to reduce the accuracy of our models based on Secml library, 
-to be reviewed.
+### attack_testing_secml.py
+In this file we executed an adversarial attack against a subset of our dataset based on the secml library, using 
+foolbox to launch a prepared perturbation attack in order to reduce the accuracy of our models.
+We launched the attack on three models that we choose with respect to the accuracy that the model obtained using a 
+different learning rate each time. The chosen models are the Squeezenet 1.0, the Resnet 152 and the Densenet 161 with
+learning rates of 0.01, 0.01 and 0.001 respectively. The results are saved on a unique plot in a pdf file.

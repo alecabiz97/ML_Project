@@ -10,7 +10,7 @@ from copy import copy
 root = 'ICubWorld28'
 dataset = ICubWorld28(root, train=True)
 labels = dataset.labels
-f = open('trained_models/squeezenet1_1_0.001_7_classes.pkl', 'rb')
+f = open('trained_models/squeezenet1_0_0.001_7_classes.pkl', 'rb')
 model = pickle.load(f)
 f.close()
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'

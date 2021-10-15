@@ -24,7 +24,7 @@ from secml.ml.features import CNormalizerMeanStd
 # Hyperparameters
 n_samples_for_class = 100
 sub_label = False
-steps = 100
+steps = 50
 y_target = None  # None if `error-generic`, the label of the target class for `error-specific`
 lb = 0.0
 ub = 1.0
@@ -85,4 +85,4 @@ fig.sp.ylabel("Accuracy (%)")
 CFigure.show()
 
 # Saving the Attack Results on a pdf file
-fig.savefig(f'Security Evaluation Curve', file_format='pdf')
+fig.savefig(f'Security Evaluation Curve.pdf', file_format='pdf')
