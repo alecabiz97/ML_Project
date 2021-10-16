@@ -26,8 +26,8 @@ n_samples_for_class = 100
 sub_label = False
 steps = 50
 y_target = None  # None if `error-generic`, the label of the target class for `error-specific`
-lb = 0.0
-ub = 1.0
+lb = 0.0  # Lower bound
+ub = 1.0  # Upper bound
 abs_stepsize = 0.03
 
 # Perturbation levels to test
@@ -36,15 +36,17 @@ e_vals = CArray.arange(start=0, step=0.05, stop=0.35)
 fig = CFigure(height=6, width=6)
 
 for modelname, lr in zip(['squeezenet1_0', 'resnet152', 'densenet161'], ['0.01', '0.01', '0.001']):
+    # Load the chosen models
     f = open(f'trained_models/{modelname}_{lr}_7_classes.pkl', 'rb')
     model = pickle.load(f)
     f.close()
 
+    # Data transformation
     data_transforms = transforms.Compose([
         transforms.Resize(224),
         transforms.CenterCrop(224),
         transforms.ToTensor()])
-
+    # Data normalization
     normalizer = CNormalizerMeanStd(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
 
     dataset = ICubWorld28('ICubWorld28', train=False, transform=data_transforms, sub_label=sub_label)
@@ -59,6 +61,7 @@ for modelname, lr in zip(['squeezenet1_0', 'resnet152', 'densenet161'], ['0.01',
                              pretrained=True,
                              pretrained_classes=labels)
 
+    # Chosen type of attack
     pgd_attack = CFoolboxPGDL2(clf, y_target,
                                lb=lb, ub=ub,
                                abs_stepsize=abs_stepsize,
@@ -80,6 +83,7 @@ for modelname, lr in zip(['squeezenet1_0', 'resnet152', 'densenet161'], ['0.01',
     end = time()
     print('Evaluation time: {} minutes'.format(round((end - start) / 60, 2)))
 
+# Plotting the results of the Attack
 fig.sp.ylim(0, 100)
 fig.sp.ylabel("Accuracy (%)")
 CFigure.show()

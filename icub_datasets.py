@@ -4,6 +4,7 @@ from PIL import Image
 from torchvision.transforms import ToTensor
 import numpy as np
 
+
 class ICubWorld7(torch.utils.data.Dataset):
 
     def __init__(self, root, train=True, transform=None, target_transform=None):
@@ -29,17 +30,16 @@ class ICubWorld7(torch.utils.data.Dataset):
         self.target_transform = target_transform
 
     def __len__(self):
-        ''' Return the number of samples in the dataset'''
+        """Return the number of samples in the dataset"""
         return len(self.img_info)
 
     def __getitem__(self, idx):
-        '''Return the image and the label of the element of index idx
-            :param
-                idx: integer
-            :return
-                image: Tensor(3,80,80)
-                label: Integer
-            '''
+        """
+        Return the image and the label of the element of index idx
+        :param idx: integer
+        :return image, Tensor(3,80,80)
+        :return: label, Integer
+        """
         img_path = os.path.join(self.root, self.img_info[idx, 0])
         image = Image.open(img_path)
         label = self.img_info[idx, 1]  # the label is a string
@@ -51,11 +51,11 @@ class ICubWorld7(torch.utils.data.Dataset):
         return image, label
 
     def get_data(self):
-        '''Return all the sample
-            :return
-                X: Tensor(n_smaples,n_channel,height,width) All the data
-                y: Tensor(n_samples) All the labels
-        '''
+        """
+        Return all the sample
+        :return X, Tensor(n_smaples,n_channel,height,width) All the data
+        :return y, Tensor(n_samples) All the labels
+        """
         trans = ToTensor()
         img, label = self.__getitem__(0)
         if self.transform is None:
@@ -74,8 +74,8 @@ class ICubWorld7(torch.utils.data.Dataset):
 
 class ICubWorld28(torch.utils.data.Dataset):
 
-    def __init__(self, root, train=True, transform=None, target_transform=None,sub_label=False):
-        self.sub_label=sub_label
+    def __init__(self, root, train=True, transform=None, target_transform=None, sub_label=False):
+        self.sub_label = sub_label
         if train:
             self.root = os.path.join(root, 'train')
         else:
@@ -100,26 +100,25 @@ class ICubWorld28(torch.utils.data.Dataset):
         # Convert to numpy array
         self.img_info = np.array(self.img_info)
         if self.sub_label:
-            self.labels = np.unique(self.img_info[:, 2]) # ex cup1
+            self.labels = np.unique(self.img_info[:, 2])  # ex cup1
         else:
-            self.labels = np.unique(self.img_info[:, 1]) # ex cup
+            self.labels = np.unique(self.img_info[:, 1])  # ex cup
         # Create a dictionary class_to_idx to convert string labels to integer
         self.class_to_idx = {lab: num for num, lab in enumerate(self.labels)}
         self.transform = transform
         self.target_transform = target_transform
 
     def __len__(self):
-        ''' Return the number of samples in the dataset'''
+        """Return the number of samples in the dataset"""
         return self.img_info.shape[0]
 
     def __getitem__(self, idx):
-        '''Return the image and the label of the element of index idx
-            :param
-                idx: integer
-            :return
-                image: Tensor(3,240,320)
-                label: Integer
-            '''
+        """
+        Return the image and the label of the element of index idx
+        :param idx: integer
+        :return: image, Tensor(3,240,320)
+        :return: label, Integer
+        """
         img_path = os.path.join(self.root, self.img_info[idx, 0])
         image = Image.open(img_path)
         if self.sub_label:
@@ -134,11 +133,11 @@ class ICubWorld28(torch.utils.data.Dataset):
         return image, label
 
     def get_data(self):
-        '''Return all the sample
-            :return
-                X: Tensor(n_samples,n_channel,height,width) All the data
-                y: Tensor(n_samples) All the labels
-        '''
+        """
+        Return all the sample
+        :return: X, Tensor(n_samples,n_channel,height,width) All the data
+        :return: y, Tensor(n_samples) All the labels
+        """
         trans = ToTensor()
         img, label = self.__getitem__(0)
         if self.transform is None:
@@ -167,7 +166,7 @@ if __name__ == '__main__':
 
     # Prova ICubWorld28
     root = 'ICubWorld28'
-    d = ICubWorld28(root,sub_label=True)
+    d = ICubWorld28(root, sub_label=True)
     print(len(d.labels))
     img, y = d.__getitem__(200)
     print(y)

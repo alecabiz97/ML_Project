@@ -3,13 +3,16 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from icub_datasets import ICubWorld28
+
 num_classes = [28, 7]
 for n in num_classes:
     # TEST DATA
+    # Loading test results to show
     f = open(f'results/test_results_{n}_classes.pkl', 'rb')
     results = pickle.load(f)
     f.close()
 
+    # Models used
     models = ['squeezenet1_1',
               'resnet152',
               'densenet161',
@@ -18,6 +21,7 @@ for n in num_classes:
               'alexnet']
     learning_rates = ['0.01', '0.001', '0.0001']
 
+    # Creation of lists for each model
     squeezenet1_1_acc = []
     resnet152_acc = []
     densenet161_acc = []
@@ -48,13 +52,13 @@ for n in num_classes:
     fig.set_figwidth(15)
     fig.set_figheight(8)
 
-
-    rects1 = ax.bar(x - 2.5*width, squeezenet1_1_acc, width, label='Squeezenet1_1')
-    rects2 = ax.bar(x - 1.5*width, resnet152_acc, width, label='Resnet152')
-    rects3 = ax.bar(x - 0.5*width, densenet161_acc, width, label='Densenet161')
-    rects4 = ax.bar(x + 0.5*width, squeezenet1_0_acc, width, label='Squeezenet1_0')
-    rects5 = ax.bar(x + 1.5*width, resnet18_acc, width, label='Resnet18')
-    rects6 = ax.bar(x + 2.5*width, alexnet_acc, width, label='Alexnet')
+    # rectangles shown while plotting the histogram
+    rects1 = ax.bar(x - 2.5 * width, squeezenet1_1_acc, width, label='Squeezenet1_1')
+    rects2 = ax.bar(x - 1.5 * width, resnet152_acc, width, label='Resnet152')
+    rects3 = ax.bar(x - 0.5 * width, densenet161_acc, width, label='Densenet161')
+    rects4 = ax.bar(x + 0.5 * width, squeezenet1_0_acc, width, label='Squeezenet1_0')
+    rects5 = ax.bar(x + 1.5 * width, resnet18_acc, width, label='Resnet18')
+    rects6 = ax.bar(x + 2.5 * width, alexnet_acc, width, label='Alexnet')
 
     # Add some text for labels, title and custom x-axis tick labels, etc.
     ax.set_ylabel('Accuracy')
@@ -71,13 +75,13 @@ for n in num_classes:
     ax.bar_label(rects5, padding=3)
     ax.bar_label(rects6, padding=3)
 
-    plt.ylim([0,100])
+    plt.ylim([0, 100])
 
     fig.tight_layout()
 
     plt.show()
 
-    # # TRAINING DATA
+    # TRAINING DATA
     f = open(f'results/train_results_{n}_classes.pkl', 'rb')
     results = pickle.load(f)
     f.close()
@@ -99,7 +103,6 @@ for n in num_classes:
               'squeezenet1_0',
               'resnet18',
               'alexnet']
-    # models = ['squeezenet1_1', 'resnet152', 'densenet161']
     learning_rates = [0.01, 0.001, 0.0001]
     for lr in learning_rates:
         plt.rc('axes', titlesize=15)  # fontsize of the axes title
@@ -149,19 +152,18 @@ for n in num_classes:
         plt.show()
 
 # Confusion Matrix
-for sub_label in [True,False]:
-    num_classes=28 if sub_label else 7
+for sub_label in [True, False]:
+    num_classes = 28 if sub_label else 7
     f = open(f'results/test_results_{num_classes}_classes.pkl', 'rb')
     d = pickle.load(f)
     f.close()
 
     dataset = ICubWorld28('ICubWorld28', sub_label=sub_label)
     labels = dataset.labels
-    #models = ['densenet161', 'resnet152', 'squeezenet1_1']
     learning_rates = ['0.01', '0.001', '0.0001']
     with pd.ExcelWriter(f'confusion_matrices_{num_classes}_classes.xlsx') as writer:
         for model_lr in d.keys():
-                conf = d[model_lr][0]
-                conf = np.around(conf.numpy(), 2)
-                df = pd.DataFrame(conf, index=labels, columns=labels)
-                df.to_excel(writer, sheet_name=model_lr, float_format="%.2f")
+            conf = d[model_lr][0]
+            conf = np.around(conf.numpy(), 2)
+            df = pd.DataFrame(conf, index=labels, columns=labels)
+            df.to_excel(writer, sheet_name=model_lr, float_format="%.2f")

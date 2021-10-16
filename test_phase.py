@@ -10,6 +10,14 @@ import numpy as np
 
 
 def test(model, test_dataloader, criterion, n_classes):
+    """
+    :param model: Model used for testing
+    :param test_dataloader: Elements used during testing
+    :param criterion: Criterion used
+    :param n_classes: Number of classes used
+    :return: confusion_matrix, Confusion Matrix with test results
+    :return: accuracy, Accuracy value (float)
+    """
     model.eval()
 
     running_loss = 0
@@ -49,12 +57,12 @@ def test(model, test_dataloader, criterion, n_classes):
 if __name__ == "__main__":
 
     # Hyperparameters
-    sub_label = False
+    sub_label = True  # If True uses 28 classes during training otherwise it uses 7 classes
     num_classes = 28 if sub_label else 7  # Number of classes in the dataset
     root = "iCubWorld28"
     batch_size = 64  # Batch size for training (change depending on how much memory you have)
     results = {}
-    SUBSET = False
+    SUBSET = False  # If True pick only part of the dataset
 
     if torch.cuda.is_available():
         print("CUDA is available! Testing on GPU...")
@@ -73,8 +81,10 @@ if __name__ == "__main__":
             model = pickle.load(f)
             f.close()
 
+            # Send the model to gpu (if available)
             model.to(device)
 
+            # Transform Images and Normalization
             data_transforms = transforms.Compose([
                 transforms.Resize(input_size),
                 transforms.CenterCrop(input_size),

@@ -10,16 +10,24 @@ from copy import copy
 root = 'ICubWorld28'
 dataset = ICubWorld28(root, train=True)
 labels = dataset.labels
-f = open('trained_models/squeezenet1_0_0.001_7_classes.pkl', 'rb')
+
+# Loading the model chosen for real-time classification
+f = open('trained_models/squeezenet1_0_0.01_7_classes.pkl', 'rb')
 model = pickle.load(f)
 f.close()
+
+# Use the GPU if available
 device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 model = model.to(device)
+
+# Image Transformation and Normalization
 data_transforms = transforms.Compose([
     transforms.Resize(224),
     transforms.CenterCrop(224),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+
+# Video Acquisition
 cap = cv2.VideoCapture(0)
 while 1:
     ret, frame = cap.read()
@@ -31,6 +39,8 @@ while 1:
     height, width = int(cap.get(3)), int(cap.get(4))
 
     frame2 = copy(frame)
+
+    # Show a rectangle to mark the cropped area for recognition
     cv2.rectangle(frame2, (int(height / 2) - 112, int(width / 2) - 112), (int(height / 2) + 112, int(width / 2) + 112),
                   (0, 255, 0), 4)
     img = frame[int(width / 2) - 112:int(width / 2) + 112, int(height / 2) - 112:int(height / 2) + 112]
@@ -41,10 +51,13 @@ while 1:
 
     img = img.to(device)
 
+    # Classification
     output = model(img.unsqueeze(0))
     score, pred = torch.max(output, 1)
     label = labels[pred.item()]
 
+    # Put text on the upper part of the rectangle to show the label
+    # with the corresponding recognition percentage
     font = cv2.FONT_HERSHEY_SIMPLEX
     text = '{}: {:.2f}%'.format(label, score.item())
     frame2 = cv2.putText(frame2, text, (int(height / 2) - 112, int(width / 2) - 120), font, 0.7, (0, 0, 0), 2,
@@ -54,6 +67,7 @@ while 1:
 
     cv2.imshow('frame', frame2)
 
+    # Stop the video acquisition
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 

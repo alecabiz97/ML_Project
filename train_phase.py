@@ -35,8 +35,8 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=50, is_ince
             else:
                 model.eval()  # Set model to evaluate mode
 
-            running_loss = 0.0
-            running_corrects = 0
+            running_loss = 0.0  # Initialized loss
+            running_corrects = 0  # Initialized correct checks
 
             # Iterate over data
             for i, (inputs, labels) in enumerate(dataloaders[phase]):
@@ -66,6 +66,7 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=50, is_ince
                 running_loss += loss.item()
                 running_corrects += torch.sum(preds == labels.data)
 
+            # Loss and Accuracy Evaluation
             epoch_loss = running_loss / len(dataloaders[phase].dataset)
             epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
 
@@ -86,17 +87,28 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=50, is_ince
     return model, history
 
 
+# Finetuning only on the last layers of the pretrained models
 def set_parameter_requires_grad(model, feature_extracting):
     if feature_extracting:
         for param in model.parameters():
             param.requires_grad = False
 
 
+# Initialize the model based on the chosen one
 def initialize_model(model_name, num_classes, feature_extract, use_pretrained=True):
     model_ft = None
     input_size = 0
 
-    if model_name == "resnet152":
+    if model_name == "resnet18":
+        """ Resnet18
+        """
+        model_ft = models.resnet18(pretrained=use_pretrained)
+        set_parameter_requires_grad(model_ft, feature_extract)
+        num_ftrs = model_ft.fc.in_features
+        model_ft.fc = nn.Linear(num_ftrs, num_classes)
+        input_size = 224
+
+    elif model_name == "resnet152":
         """ Resnet152
         """
         model_ft = models.resnet152(pretrained=use_pretrained)
@@ -114,8 +126,17 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
+    elif model_name == "squeezenet1_0":
+        """ Squeezenet1.0
+        """
+        model_ft = models.squeezenet1_0(pretrained=use_pretrained)
+        set_parameter_requires_grad(model_ft, feature_extract)
+        model_ft.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=(1, 1), stride=(1, 1))
+        model_ft.num_classes = num_classes
+        input_size = 224
+
     elif model_name == "squeezenet1_1":
-        """ Squeezenet
+        """ Squeezenet1.1
         """
         model_ft = models.squeezenet1_1(pretrained=use_pretrained)
         set_parameter_requires_grad(model_ft, feature_extract)
@@ -144,14 +165,14 @@ if __name__ == '__main__':
     # Hyperparameters
     root = 'ICubWorld28'
     batch_size = 64  # Batch size for training (change depending on how much memory you have)
-    num_epochs = 50 # Number of epochs to train for
+    num_epochs = 50  # Number of epochs to train for
     SAVE = True  # Boolean parameter to decide if the model needs to be saved (True=Yes, False=No)
-    feature_extract = True
-    sub_label = True
+    feature_extract = True  # If True Modify only last layers of each model
+    sub_label = True  # If True uses 28 classes during training otherwise it uses 7 classes
     num_classes = 28 if sub_label else 7  # Number of classes in the dataset
-    SUBSET = False
+    SUBSET = False  # If True pick only part of the dataset
 
-    for model_name in ['squeezenet1_1', 'resnet152', 'densenet161']:
+    for model_name in ['alexnet', 'squeezenet1_0', 'squeezenet1_1', 'resnet18', 'resnet152', 'densenet161']:
         for learning_rate in [0.01, 0.001, 0.0001]:
 
             model_ft, input_size = initialize_model(model_name, num_classes, feature_extract, use_pretrained=True)
@@ -206,20 +227,20 @@ if __name__ == '__main__':
             model_ft, history = train_model(model_ft, dataloaders, criterion, optimizer_ft, num_epochs=num_epochs)
 
             # Plot the train
-            for phase in ['train', 'val']:
-                data = np.array(history[phase])
-                x = np.arange(1, data.shape[0] + 1)
-                plt.subplot(2, 1, 1)
-                plt.plot(x, data[:, 0], label='{}'.format(phase), marker='.')
-                plt.title('Loss')
-                plt.xlabel('Epochs')
-                plt.legend()
-                plt.subplot(2, 1, 2)
-                plt.plot(x, data[:, 1], label='{}'.format(phase), marker='.')
-                plt.title('Accuracy')
-                plt.xlabel('Epochs')
-            plt.legend()
-            plt.show()
+            # for phase in ['train', 'val']:
+            #     data = np.array(history[phase])
+            #     x = np.arange(1, data.shape[0] + 1)
+            #     plt.subplot(2, 1, 1)
+            #     plt.plot(x, data[:, 0], label='{}'.format(phase), marker='.')
+            #     plt.title('Loss')
+            #     plt.xlabel('Epochs')
+            #     plt.legend()
+            #     plt.subplot(2, 1, 2)
+            #     plt.plot(x, data[:, 1], label='{}'.format(phase), marker='.')
+            #     plt.title('Accuracy')
+            #     plt.xlabel('Epochs')
+            # plt.legend()
+            # plt.show()
 
             if SAVE:
                 # Save the model
